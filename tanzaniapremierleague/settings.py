@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -19,13 +20,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-cw^$1h05)=q9tq)!#)$v%+^y3giao2zz@1agfaeklknqd7vzr&'
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -37,6 +34,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    
+    # Third-party apps
+    'rest_framework',
+    'djoser', 
+    # Your custom apps
+    'league',
+    'users',
+    'fantansy',
+    'gameweeks',
+    'teams',
 ]
 
 MIDDLEWARE = [
@@ -71,7 +78,6 @@ WSGI_APPLICATION = 'tanzaniapremierleague.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -82,7 +88,6 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -101,23 +106,63 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.2/howto/static-files/
+# Static files
 
 STATIC_URL = 'static/'
 
+
 # Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# Django Rest Framework and JWT settings
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # Only JWT authentication
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Restrict access to authenticated users
+    ],
+}
+
+# JWT token settings
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist tokens after refresh
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Use 'Bearer' prefix for tokens
+}
+
+
+# Djoser configuration for JWT
+DJOSER = {
+    'LOGIN_FIELD': 'email',  # Use email as the login field
+    'USER_CREATE_PASSWORD_RETYPE': True,  # Require password confirmation on signup
+    'SERIALIZERS': {
+        'user_create': 'djoser.serializers.UserCreateSerializer',
+        'user': 'djoser.serializers.UserSerializer',
+        'current_user': 'djoser.serializers.UserSerializer',
+    },
+    'PERMISSIONS': {
+        'user_list': ['rest_framework.permissions.IsAdminUser'],  # Admin can see user list
+        'user_create': ['rest_framework.permissions.AllowAny'],  # Allow anyone to sign up
+        'user_delete': ['rest_framework.permissions.IsAuthenticated'],
+    }
+}
+AUTHENTICATION_BACKENDS = [
+    'users.authentication.EmailOrUsernameOrPhoneBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Keep this to allow admin login
+]
+
+AUTH_USER_MODEL = 'users.CustomUser'
+
